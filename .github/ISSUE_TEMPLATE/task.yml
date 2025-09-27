@@ -1,0 +1,12 @@
+﻿name: Task
+description: Umzusetzende Aufgabe
+labels: ["type:chore"]
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: Ziel/Beschreibung
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Akzeptanzkriterien

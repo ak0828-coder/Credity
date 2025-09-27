@@ -1,0 +1,17 @@
+﻿name: Bug Report
+description: Melde einen Fehler
+labels: ["type:bug"]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: Was ist passiert?
+      description: Erwartetes vs. tatsächliches Verhalten
+  - type: textarea
+    id: steps
+    attributes:
+      label: Schritte zum Reproduzieren
+  - type: input
+    id: version
+    attributes:
+      label: Version/Commit
