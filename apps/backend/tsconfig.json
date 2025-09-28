@@ -1,13 +1,14 @@
-﻿{
+{
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "module": "CommonJS",
-    "target": "ES2021",
+    "moduleResolution": "node",
+    "target": "ES2022",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "declaration": true,
     "sourceMap": true,
     "outDir": "./dist",
-    "incremental": true,
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true
+    "incremental": true
   }
 }
