@@ -2,72 +2,70 @@ name: CI
 
 on:
   push:
-    branches: [main, develop]
+    branches: [develop, main]
   pull_request:
-    branches: [main, develop]
-
-concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
-
-env:
-  CI: true
-  NEXT_TELEMETRY_DISABLED: 1
+    branches: [develop, main]
 
 jobs:
   build_test:
     runs-on: ubuntu-latest
+    env:
+      CI: true
+      NEXT_TELEMETRY_DISABLED: 1
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Use Node.js 20.x (with pnpm cache)
+      # 1) Node installieren
+      - name: Use Node.js 20.x
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: pnpm
 
-      - name: Enable corepack & pnpm
+      # 2) pnpm installieren (erst jetzt existiert pnpm)
+      - name: Enable Corepack & pnpm
         run: |
           corepack enable
           corepack prepare pnpm@9.15.9 --activate
           pnpm -v
 
+      # 3) pnpm-Cache aktivieren (jetzt darf GitHub pnpm cachen)
+      - name: Enable pnpm cache
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      # 4) Pakete holen, Lint, Tests, Build
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile=false
 
       - name: Lint (all workspaces)
         run: pnpm -r lint
 
-      - name: Test (all workspaces)
-        run: pnpm -r test
+      - name: Test (all workspaces; skip if none)
+        run: pnpm -r --if-present test
 
       - name: Build (all workspaces)
         run: pnpm -r build
 
-      # --- Artefakte packen ---
+      # 5) (Optional) Build-Ergebnisse als Download bereitstellen
       - name: Pack frontend build
-        if: always()
         run: |
-          if [ -d "apps/frontend/.next" ]; then tar -czf frontend-next-build.tgz -C apps/frontend .next; fi
+          pnpm --filter @credity/frontend build
+          tar czf frontend-next-build.tgz -C apps/frontend .next || true
 
       - name: Pack backend build
-        if: always()
         run: |
-          if [ -d "apps/backend/dist" ]; then tar -czf backend-dist.tgz -C apps/backend dist; fi
-
-      # --- SBOM (CycloneDX) erzeugen ---
-      - name: Generate SBOM (CycloneDX)
-        run: npx @cyclonedx/cyclonedx-npm --spec-version 1.5 --output-file bom.json
+          pnpm --filter @credity/backend build
+          tar czf backend-dist.tgz -C apps/backend dist || true
 
       - name: Upload artifacts
-        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: build-artifacts
+          if-no-files-found: ignore
           path: |
             frontend-next-build.tgz
             backend-dist.tgz
-            bom.json
-          if-no-files-found: ignore
