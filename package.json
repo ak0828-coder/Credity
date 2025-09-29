@@ -2,19 +2,27 @@
   "name": "@credity/monorepo",
   "private": true,
   "packageManager": "pnpm@9.15.9",
-  "engines": { "node": ">=20.0.0" },
-  "workspaces": ["apps/*", "libs/*"],
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "workspaces": [
+    "apps/*",
+    "libs/*"
+  ],
   "scripts": {
     "dev": "pnpm -r --parallel dev",
     "build": "pnpm -r build",
     "lint": "pnpm -r lint",
     "test": "pnpm -r test",
     "dev:fe": "pnpm --filter @credity/frontend dev",
-    "dev:be": "pnpm --filter @credity/backend dev"
+    "dev:be": "pnpm --filter @credity/backend dev",
+    "prepare": "husky install"
   },
   "devDependencies": {
     "@types/node": "^20.11.30",
     "eslint": "^9.36.0",
+    "husky": "^8.0.0",
+    "lint-staged": "^16.2.3",
     "prettier": "^3.6.2",
     "typescript": "^5.9.2"
   }
