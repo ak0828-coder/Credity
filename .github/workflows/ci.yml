@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+    branches: [develop, main]
+  pull_request:
+    branches: [develop, main]
+
+jobs:
+  build_test:
+    runs-on: ubuntu-latest
+    env:
+      CI: true
+      NEXT_TELEMETRY_DISABLED: 1
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 1) Node installieren
+      - name: Use Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # 2) pnpm installieren (erst jetzt existiert pnpm)
+      - name: Enable Corepack & pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@9.15.9 --activate
+          pnpm -v
+
+      # 3) pnpm-Cache aktivieren (jetzt darf GitHub pnpm cachen)
+      - name: Enable pnpm cache
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      # 4) Pakete holen, Lint, Tests, Build
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile=false
+
+      - name: Lint (all workspaces)
+        run: pnpm -r lint
+
+      - name: Test (all workspaces; skip if none)
+        run: pnpm -r --if-present test
+
+      - name: Build (all workspaces)
+        run: pnpm -r build
+
+      # 5) (Optional) Build-Ergebnisse als Download bereitstellen
+      - name: Pack frontend build
+        run: |
+          pnpm --filter @credity/frontend build
+          tar czf frontend-next-build.tgz -C apps/frontend .next || true
+
+      - name: Pack backend build
+        run: |
+          pnpm --filter @credity/backend build
+          tar czf backend-dist.tgz -C apps/backend dist || true
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          if-no-files-found: ignore
+          path: |
+            frontend-next-build.tgz
+            backend-dist.tgz
