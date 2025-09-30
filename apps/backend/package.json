@@ -1,4 +1,4 @@
-﻿{
+{
   "name": "@credity/backend",
   "version": "0.0.1",
   "description": "",
@@ -71,5 +71,6 @@
   },
   "engines": {
     "node": "20.x"
-  }
+  },
+  "packageManager": "pnpm@9.15.9"
 }
