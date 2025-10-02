@@ -6,8 +6,6 @@
     "declaration": true,
     "sourceMap": true,
     "incremental": true,
-
-    // >>> WICHTIG: Legacy-Decorators einschalten
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true
   },
