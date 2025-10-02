@@ -7,7 +7,7 @@ import { EmailsProcessor } from './emails.processor';
   imports: [
     BullModule.forRoot({
       connection: {
-        url: process.env.REDIS_URL!, // Upstash rediss://...
+        url: process.env.REDIS_URL!,
         maxRetriesPerRequest: null,
         enableReadyCheck: false,
       },
@@ -15,7 +15,7 @@ import { EmailsProcessor } from './emails.processor';
     }),
     BullModule.registerQueue({ name: 'emails' }),
   ],
-  controllers: [AppController], // <— Controller registrieren
-  providers: [EmailsProcessor], // <— Worker registrieren
+  controllers: [AppController],
+  providers: [EmailsProcessor],
 })
 export class AppModule {}
