@@ -1,10 +1,21 @@
 import { Module } from '@nestjs/common';
+import { BullModule } from '@nestjs/bullmq';
 import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { EmailsProcessor } from './emails.processor';
 
 @Module({
-  imports: [],
+  imports: [
+    BullModule.forRoot({
+      connection: {
+        url: process.env.REDIS_URL!,
+        maxRetriesPerRequest: null,
+        enableReadyCheck: false,
+      },
+      prefix: process.env.BULLMQ_PREFIX ?? 'credity',
+    }),
+    BullModule.registerQueue({ name: 'emails' }),
+  ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [EmailsProcessor],
 })
 export class AppModule {}
