@@ -5,9 +5,7 @@
     "outDir": "./dist",
     "declaration": true,
     "sourceMap": true,
-    "incremental": true,
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true
+    "incremental": true
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "dist", "test", "**/*spec.ts"]
