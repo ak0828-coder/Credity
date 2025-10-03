@@ -31,4 +31,4 @@ async function bootstrap() {
   logger.log(`🚀 Backend listening on http://${host}:${port}`);
 }
 
-bootstrap();
+void bootstrap();
