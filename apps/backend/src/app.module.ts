@@ -1,21 +1,26 @@
 import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
 import { AppController } from './app.controller';
+import { AppService } from './app.service';
 import { EmailsProcessor } from './emails.processor';
 
+const hasRedis = !!process.env.REDIS_URL;
+
+const bullImports = hasRedis
+  ? [
+      BullModule.forRoot({
+        // String-URL wie "rediss://default:PASS@HOST:PORT"
+        connection: process.env.REDIS_URL as unknown as string,
+      }),
+      BullModule.registerQueue({ name: 'emails' }),
+    ]
+  : [];
+
+const bullProviders = hasRedis ? [EmailsProcessor] : [];
+
 @Module({
-  imports: [
-    BullModule.forRoot({
-      connection: {
-        url: process.env.REDIS_URL!, // Upstash rediss://...
-        maxRetriesPerRequest: null,
-        enableReadyCheck: false,
-      },
-      prefix: process.env.BULLMQ_PREFIX ?? 'credity',
-    }),
-    BullModule.registerQueue({ name: 'emails' }),
-  ],
-  controllers: [AppController], // <— Controller registrieren
-  providers: [EmailsProcessor], // <— Worker registrieren
+  imports: [...bullImports],
+  controllers: [AppController],
+  providers: [AppService, ...bullProviders],
 })
 export class AppModule {}
