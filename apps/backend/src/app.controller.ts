@@ -16,7 +16,7 @@ export class AppController {
     await this.emails.add(
       'sendWelcome',
       { userId: '123' },
-      { removeOnComplete: true },
+      { attempts: 3, removeOnComplete: true },
     );
     return { queued: true };
   }
