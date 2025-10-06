@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
 import type { RedisOptions } from 'ioredis';
+import type { ConnectionOptions as TlsOptions } from 'tls';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { EmailsProcessor } from './emails.processor';
@@ -16,8 +17,8 @@ function parseRedis(urlStr: string): RedisOptions {
     password: u.password || undefined,
   };
   if (u.protocol === 'rediss:') {
-    // TLS f�r Upstash/Managed-Redis
-    (opts as any).tls = {};
+    // TLS f�r Upstash/Managed-Redis � korrekt typisiert, kein "any"
+    opts.tls = {} as TlsOptions;
   }
   return opts;
 }
