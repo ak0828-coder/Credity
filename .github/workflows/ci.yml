@@ -13,7 +13,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'pnpm'
 
       - name: Enable Corepack & set pnpm
         run: |
@@ -24,7 +23,6 @@ jobs:
       - name: Install deps
         run: pnpm install --frozen-lockfile --prefer-offline
 
-      # WICHTIG: --if-present geh�rt zu pnpm, NICHT zur Script-CLI.
       - name: Lint
         run: pnpm -r --if-present run lint
 
