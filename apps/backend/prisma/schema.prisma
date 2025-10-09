@@ -1,0 +1,86 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ConsentType {
+  MARKETING
+  TERMS
+}
+
+enum JobStatus {
+  queued
+  active
+  completed
+  failed
+}
+
+model Profile {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId     String   @unique
+  email      String   @unique
+  givenName  String?
+  familyName String?
+  createdAt  DateTime @default(now()) @db.Timestamptz(6)
+
+  consents  Consent[]
+  reports   Report[]
+  auditLogs AuditLog[] @relation("AuditActor")
+}
+
+model Consent {
+  id        String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String
+  type      ConsentType
+  version   String
+  status    Boolean
+  createdAt DateTime    @default(now()) @db.Timestamptz(6)
+  revokedAt DateTime?   @db.Timestamptz(6)
+
+  profile Profile @relation(fields: [userId], references: [userId])
+
+  @@unique([userId, type, version])
+}
+
+model Report {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String
+  score     Int
+  meta      Json?
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+
+  profile Profile @relation(fields: [userId], references: [userId])
+
+  @@index([userId])
+}
+
+model AuditLog {
+  id          BigInt   @id @default(autoincrement())
+  actorUserId String
+  action      String
+  resource    String
+  resourceId  String?  @db.Uuid
+  meta        Json?
+  createdAt   DateTime @default(now()) @db.Timestamptz(6)
+
+  actor Profile @relation("AuditActor", fields: [actorUserId], references: [userId])
+
+  @@index([actorUserId])
+}
+
+model Job {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  queue     String
+  name      String
+  payload   Json
+  status    JobStatus @default(queued)
+  attempts  Int       @default(0)
+  runAt     DateTime? @db.Timestamptz(6)
+  createdAt DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@index([queue, status])
+}
