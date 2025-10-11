@@ -7,29 +7,16 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum ConsentType {
-  MARKETING
-  TERMS
-}
-
-enum JobStatus {
-  queued
-  active
-  completed
-  failed
-}
-
 model Profile {
-  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId     String   @unique
-  email      String   @unique
+  id         String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId     String     @unique
+  email      String     @unique
   givenName  String?
   familyName String?
-  createdAt  DateTime @default(now()) @db.Timestamptz(6)
-
-  consents  Consent[]
-  reports   Report[]
-  auditLogs AuditLog[] @relation("AuditActor")
+  createdAt  DateTime   @default(now()) @db.Timestamptz(6)
+  auditLogs  AuditLog[] @relation("AuditActor")
+  consents   Consent[]
+  reports    Report[]
 }
 
 model Consent {
@@ -40,8 +27,7 @@ model Consent {
   status    Boolean
   createdAt DateTime    @default(now()) @db.Timestamptz(6)
   revokedAt DateTime?   @db.Timestamptz(6)
-
-  profile Profile @relation(fields: [userId], references: [userId])
+  profile   Profile     @relation(fields: [userId], references: [userId])
 
   @@unique([userId, type, version])
 }
@@ -52,8 +38,7 @@ model Report {
   score     Int
   meta      Json?
   createdAt DateTime @default(now()) @db.Timestamptz(6)
-
-  profile Profile @relation(fields: [userId], references: [userId])
+  profile   Profile  @relation(fields: [userId], references: [userId])
 
   @@index([userId])
 }
@@ -66,8 +51,7 @@ model AuditLog {
   resourceId  String?  @db.Uuid
   meta        Json?
   createdAt   DateTime @default(now()) @db.Timestamptz(6)
-
-  actor Profile @relation("AuditActor", fields: [actorUserId], references: [userId])
+  actor       Profile  @relation("AuditActor", fields: [actorUserId], references: [userId])
 
   @@index([actorUserId])
 }
@@ -83,4 +67,52 @@ model Job {
   createdAt DateTime  @default(now()) @db.Timestamptz(6)
 
   @@index([queue, status])
+}
+
+model Identity {
+  id           String           @id @default(cuid())
+  provider     IdentityProvider
+  subject      String
+  passwordHash String?
+  profileId    String
+  createdAt    DateTime         @default(now())
+  profile      ProfileVerified  @relation(fields: [profileId], references: [id])
+
+  @@unique([provider, subject])
+}
+
+enum ConsentType {
+  MARKETING
+  TERMS
+}
+
+enum JobStatus {
+  queued
+  active
+  completed
+  failed
+}
+
+enum IdentityProvider {
+  PASSWORD
+  SPID
+  CIE
+}
+
+enum AssuranceLevel {
+  none
+  spid_l2
+  spid_l3
+  cie
+}
+
+model ProfileVerified {
+  id             String         @id @default(cuid())
+  email          String         @unique
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  verifiedAt     DateTime?
+  assuranceLevel AssuranceLevel @default(none)
+
+  identities Identity[]
 }

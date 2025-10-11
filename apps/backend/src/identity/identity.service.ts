@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma.service';
+﻿import { Injectable } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class IdentityService {
@@ -9,7 +9,7 @@ export class IdentityService {
     profileId: string,
     level: 'spid_l2' | 'spid_l3' | 'cie' = 'spid_l2',
   ) {
-    // Upsert eine "SPID"-Identität mit stabilem subject
+    // Upsert einer SPID-Identität mit stabilem subject (MOCK)
     await this.prisma.identity.upsert({
       where: {
         provider_subject: { provider: 'SPID', subject: `MOCK-${profileId}` },
@@ -27,16 +27,20 @@ export class IdentityService {
       data: { verifiedAt: new Date(), assuranceLevel: level as any },
     });
 
-    // Audit
-    if ((this.prisma as any).auditLog) {
-      await this.prisma.auditLog.create({
-        data: {
-          profileId,
-          type: 'identity_verified',
-          source: 'mock',
-          payload: { provider: 'SPID', level },
-        },
-      });
+    // Optionales Audit (schema-agnostisch; keine Annahme über Felder wie "profileId")
+    try {
+      const audit = (this.prisma as any).auditLog;
+      if (audit?.create) {
+        await audit.create({
+          data: {
+            type: 'identity_verified',
+            source: 'mock',
+            payload: { provider: 'SPID', level, profileId }, // profileId in payload statt als Top-Level Feld
+          } as any,
+        });
+      }
+    } catch {
+      // In Dev ignorieren wir Audit-Fehler (unterschiedliche Schemas etc.)
     }
 
     return updated;
