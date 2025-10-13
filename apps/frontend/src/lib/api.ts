@@ -1,21 +1,15 @@
+'use client';
+
+// apps/frontend/src/lib/api.ts
+import { session } from './session';
+
 export const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL!;
 
-function getCsrf(): string | undefined {
-  if (typeof document === 'undefined') return;
-  const v = document.cookie.split('; ').find((x) => x.startsWith('csrfToken='));
-  return v?.split('=')[1];
-}
-
 export async function apiPost<T = any>(path: string, body: any): Promise<T> {
-  const csrf = getCsrf();
-  const res = await fetch(`${API_BASE}${path}`, {
+  const res = await session.authedFetch(`${API_BASE}${path}`, {
     method: 'POST',
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(csrf ? { 'x-csrf': csrf } : {}),
-    },
-    body: JSON.stringify(body),
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body ?? {}),
   });
   if (!res.ok) {
     const text = await res.text().catch(() => '');

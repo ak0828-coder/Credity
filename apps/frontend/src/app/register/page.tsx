@@ -3,6 +3,7 @@
 import { useRef, useState, useEffect } from 'react';
 import Script from 'next/script';
 import { apiPost } from '@/lib/api';
+import { session } from '@/lib/session';
 
 export default function RegisterPage() {
   const emailRef = useRef<HTMLInputElement>(null);
@@ -12,9 +13,9 @@ export default function RegisterPage() {
   const [msg, setMsg] = useState<string | null>(null);
   const [loggedIn, setLoggedIn] = useState(false);
 
-  // beim Laden einmal prüfen, ob schon ein accessToken da ist
   useEffect(() => {
     setLoggedIn(!!localStorage.getItem('accessToken'));
+    (window as any).turnstileCallback = (t: string) => setCaptchaToken(t);
   }, []);
 
   async function onSubmit(e: React.FormEvent) {
@@ -22,10 +23,10 @@ export default function RegisterPage() {
     setMsg(null);
     setLoading(true);
     try {
-      const email = emailRef.current!.value;
+      const email = emailRef.current!.value.trim().toLowerCase();
       const password = passRef.current!.value;
       const data = await apiPost('/auth/register', { email, password, captchaToken });
-      localStorage.setItem('accessToken', data.accessToken);
+      session.setToken(data.accessToken, { persist: true });
       setLoggedIn(true);
       setMsg('Register OK ✅ (eingeloggt)');
       console.log('accessToken:', data.accessToken);
@@ -38,12 +39,9 @@ export default function RegisterPage() {
 
   return (
     <main style={{ padding: 24, maxWidth: 420 }}>
-      {/* Turnstile Script */}
       <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer />
 
       <h1>Register</h1>
-
-      {/* Badge: Eingeloggt */}
       {loggedIn && <p style={{ marginTop: 8 }}>✅ Eingeloggt</p>}
 
       <form onSubmit={onSubmit}>
@@ -61,16 +59,12 @@ export default function RegisterPage() {
           required
           style={{ width: '100%', margin: '8px 0', padding: 8 }}
         />
-
-        {/* Turnstile Widget */}
         <div
           className="cf-turnstile"
           data-sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
-          // @ts-expect-error Turnstile setzt globales Callback
-          data-callback={(t: string) => setCaptchaToken(t)}
+          data-callback="turnstileCallback"
           style={{ margin: '12px 0' }}
         />
-
         <button type="submit" disabled={loading} style={{ padding: '8px 12px' }}>
           {loading ? 'Bitte warten…' : 'Register'}
         </button>
